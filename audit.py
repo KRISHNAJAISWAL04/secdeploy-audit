@@ -16,12 +16,15 @@ def audit_docker_environment():
         
         # Scan for unencrypted or completely exposed container port bindings
         print("  [!] Auditing exposed network containers...")
-        containers = subprocess.run(["docker", "ps", "--format", "{{.ID}} - {{.Names}} - {{.Ports}}"], capture_output=True, text=True)
-        if containers.stdout:
-            print(containers.stdout)
-        else:
-            print("  [✓] No highly volatile exposed containers running.")
-            
+        try:
+            containers = subprocess.run(["docker", "ps", "--format", "{{.ID}} - {{.Names}} - {{.Ports}}"], capture_output=True, text=True, check=True)
+            if containers.stdout:
+                print(containers.stdout)
+            else:
+                print("  [✓] No highly volatile exposed containers running.")
+        except subprocess.CalledProcessError as e:
+            print(f"  [❌] Error retrieving container information: {e}")
+                
     except (subprocess.CalledProcessError, FileNotFoundError):
         print("  [❌] Docker Daemon not detected on local system path.")
 
